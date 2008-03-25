@@ -1,0 +1,31 @@
+=======================
+Django EDU Installation
+=======================
+
+Thanks for downloading Django EDU
+
+Requirements
+~~~~~~~~~~~~
+
+* At least python 2.3 installed, http://www.python.org/
+* A resent revision of Django project installed, http://www.djangoproject.com/
+
+Install
+~~~~~~~
+
+To install, run the following command inside this directory:
+
+    python setup.py install
+
+Manual Install
+~~~~~~~~~~~~~~
+
+Or if you'd prefer, you can simply place the included ``django-edu`` directory
+somewhere on your PYTHONPATH, or symlink to it from somewhere on your
+PYTHONPATH; this is useful if you're working from a Subversion checkout.
+
+Further Reading
+~~~~~~~~~~~~~~~
+
+If you want or need a more verbose set of instructions please refer to the 
+documentation in docs/index.txt 

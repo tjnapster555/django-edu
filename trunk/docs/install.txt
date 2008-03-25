@@ -1,0 +1,5 @@
+=======================
+Django EDU Installation
+=======================
+
+details to follow... read the INSTALL file in the project root.

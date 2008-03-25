@@ -1,0 +1,9 @@
+==========
+Django EDU
+==========
+
+Django EDU is a set of generic views and forms that are useful for any
+university.
+
+For installation instructions please refer to the file "INSTALL" or the 
+documentation in "docs/" directory. 
