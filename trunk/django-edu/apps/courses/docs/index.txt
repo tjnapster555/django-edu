@@ -1,0 +1,26 @@
+==============
+Django Courses
+==============
+
+.. contents: Table of Contents
+
+About
+~~~~~
+
+Django courses is a set of generic views and forms that are useful for any
+university. Currently it provides a way to link courses to any number
+of objects (Textbooks, Schedule, ABET requirements, Abstracts, Syllabus).
+
+Install
+~~~~~~~
+
+To install, run the following command inside this directory:
+
+    python setup.py install
+
+Manual Install
+~~~~~~~~~~~~~~
+
+Or if you'd prefer, you can simply place the included ``courses`` directory
+somewhere on your PYTHONPATH, or symlink to it from somewhere on your
+PYTHONPATH; this is useful if you're working from a Subversion checkout.
