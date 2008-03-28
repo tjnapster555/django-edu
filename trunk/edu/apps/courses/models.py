@@ -22,13 +22,15 @@ class Course(models.Model):
     department = models.ForeignKey(Department, verbose_name=_("Department"))
     level = models.CharField(_("Level"), max_length=4, choices=COURSE_LEVELS)
     credits = models.PositiveSmallIntegerField(_("Number of Credits"))
+    pre_number = models.CharField(_("Pre Course Number"), max_length=25, blank=True)
     number = models.PositiveSmallIntegerField(_("Course Number"), db_index=True)
-    extra_number = models.CharField(_("Extra Course Number"), max_length=25)
+    post_number = models.CharField(_("Extra Course Number"), max_length=25,
+        blank=True)
     title = models.CharField(_("Course Title"), max_length=255)
 
     def __unicode__(self):
-        return u"%s %i%i%s" % (self.department, self.credits, 
-                               self.number, self.extra_number)
+        return u"%s %s%i%i%s" % (self.department.abbr, self.credits, 
+            self.pre_number, self.number, self.post_number)
 
     def short_title(self):
         """Returns a truncated title useful for table displays and menus."""
@@ -36,11 +38,17 @@ class Course(models.Model):
         return title[:22]
     
     class Meta:
-        ordering = ('number', 'title')
-        unique_together = ('department', 'number', 'extra_number', 'title')
+        ordering = ('number', 'pre_number', 'post_number', 'title')
+        unique_together = ('department', 'pre_number', 'number', 'post_number', 'title')
 
     class Admin:
         list_display = ('__unicode__', 'level', 'last_update')
-        search_fields = ('number', 'title')
         list_filter = ['level']
-        list_per_page = 400  
+        list_per_page = 400
+
+class CourseOffering(models.Model):
+    """Course Offering.
+    
+    Time/Professor/Meets with information
+    """
+    
