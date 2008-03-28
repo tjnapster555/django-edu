@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from djangoedu.ldap.fields import LdapObjectField
 
 try:
     import mptt
@@ -168,14 +169,4 @@ class Organization(models.Model):
         list_display = ('abbr', 'name')
 
 mptt.register(Organization, order_insertion_by='name')
-        
-class EduPerson(models.Model):
-    """*Edu Person*
     
-    This model uses some standard eduPerson attributes you can find more 
-    information here: http://middleware.internet2.edu/dir/schema/
-    
-    """
-    first_name = models.CharField(_("First Name"), max_length=255)
-    last_name = models.CharField(_("Last Name"), max_length=255)
-    nick_name = models.CharField(_("Nick Name"), max_length=255, blank=True)
