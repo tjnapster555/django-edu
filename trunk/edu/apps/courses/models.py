@@ -1,3 +1,15 @@
+"""
+=============
+Course Models
+=============
+
+These models try to map as closely as possible to the `LDAP eduCourse data 
+models`_. 
+
+.. _LDAP eduCourse data models: http://middleware.internet2.edu/courseid/docs/internet2-mace-dir-courseID-eduCourse-200507.html
+
+"""
+
 from django.db import models
 from django.conf import settings
 from django.core import validators
@@ -91,7 +103,7 @@ class SectionType(models.Model):
         pass
 
 class OfferingSection(models.Model):
-    """Section, an instance of an course offering."""
+    """Offering Section, an instance of an course offering."""
     parent = models.ForeignKey('self', verbose_name=_("Parent Section"), 
         blank=True, null=True, related_name='subsection')
     offering = models.ForeignKey(CourseOffering, verbose_name=_("Course Offering"))
