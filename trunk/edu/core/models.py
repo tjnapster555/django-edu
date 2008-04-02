@@ -1,6 +1,9 @@
+from django.utils.translation import ugettext as _
 from django.db import models
 from django.conf import settings
-from djangoedu.ldap.fields import LdapObjectField
+from django.contrib.auth.models import User
+
+from edu.ldap.fields import LdapObjectField
 
 try:
     import mptt
@@ -110,6 +113,64 @@ class Semester(models.Model):
     class Admin:
         list_display = ('year', 'semester', 'sdate', 'edate')
 
+class eduPersonManager(models.Manager):
+    """Custom manager to handle creation."""
+    # TODO: override create* and possibly more
+    
+class eduPerson(models.Model):
+    """*eduPerson*
+    
+    This model is designed to map to the LDAP eduPerson schema
+    http://www.educause.edu/eduperson/ . The main purpose of this
+    django model is to relate your LDAP directory to the other objects
+    in django. 
+    
+    Since everyones LDAP schema could be slightly different we do 
+    not store any of that info in this model. When a query is executed
+    on this model the ``ldap`` field returns a LDAP object, sort of like a 
+    foreign key field. This allows you to store the info in LDAP as
+    your primary source of person data. This allow requires that you
+    have properly set up your project ``settings.py`` file with the 
+    following::
+    
+        LDAP_SERVER = (required)
+        LDAP_SERVER_PORT = (default 389)
+        LDAP_SERVER_USER = (default None)
+        LDAP_SERVER_USER_PASSWORD = (default no password)
+    
+    The eduPerson model is based on person, organizationalPerson and 
+    inetOrgPerson object classes as included in X.521 so any object
+    class that has these same properties should work with eduPerson.
+    
+    You specify which object you wish to connect to such as::
+    
+       >>> p = eduPerson.objects.create(ldap="dn=username, dc=state, dc=edu")
+       >>> p.ldap.first_name
+       'first_name_stored_in_ldap_directory'
+    """
+    user = models.OneToOneField(User, verbose_name=_('User'))
+    ldap = LdapObjectField(_("LDAP Person Object"))
+    active = models.BooleanField(_("Active"), default=True)
+    
+    objects = eduPersonManager()
+    
+    def __unicode__(self):
+        return unicode(self.user)
+    
+    def update_user(self):
+        """Update django.contrib.auth User model with info from LDAP."""
+        # TODO: update *all* user info
+        self.user.first_name = self.ldap.givenName
+        self.user.last_name = self.ldap.SN
+        self.user.save()
+    
+    def save(self):
+        self.update_user()
+        super(eduPerson, self).save()
+    
+    class Admin:
+        list_display = ('user', 'ldap', 'active') 
+    
 class Organization(models.Model):
     """*Organization*
     
@@ -154,8 +215,9 @@ class Organization(models.Model):
     name = models.CharField(_("Department Name"), max_length=255)
     abbr = models.CharField(_("Abbreviation"), max_length=25, blank=True)
     website = models.URLField(_("Web Site"), verify_exists=False, blank=True)
-    logo = models.ImageField(_("Logo"), blank=True, null=True)
-    contact = models.ForeignKey(User, verbose_name=_("Contact Person"), null=True)
+    logo = models.ImageField(_("Logo"), upload_to="org/logos/", blank=True, null=True)
+    contact = models.ForeignKey(eduPerson, verbose_name=_("Contact Person"), 
+        blank=True, null=True)
     # extra 'hidden' MPTT fields
     lft = models.PositiveIntegerField(db_index=True, editable=False)
     rght = models.PositiveIntegerField(db_index=True, editable=False)
