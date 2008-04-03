@@ -12,3 +12,4 @@ class CoursesTest(TestCase):
          
         
     def testSomething(self):
+        """"""
