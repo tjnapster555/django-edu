@@ -42,7 +42,7 @@ class SemesterManager(models.Manager):
         Example::
     
            >>> import datetime
-           >>> now = datetime.datetime.now().date()
+           >>> now = datetime.datetime.now()
            >>> tomorrow = now + datetime.timedelta(days=1)
            >>> yesterday = now - datetime.timedelta(days=1)
            >>> next_week = now + datetime.timedelta(weeks=1)
@@ -51,10 +51,10 @@ class SemesterManager(models.Manager):
            >>> Semester.objects.current_semester()
            Traceback (most recent call last):
            ...
-           Exception: DoesNotExist
+           DoesNotExist
            
            # Create a current semester
-           >>> Semester.objects.create(year=now.year(),semester='2',sdate=now,edate=tomorrow)
+           >>> s = Semester.objects.create(year=now.year,semester='2',sdate=now,edate=tomorrow)
            >>> Semester.objects.current_semester()
            <Semester: ...>
            
@@ -64,7 +64,7 @@ class SemesterManager(models.Manager):
            >>> Semester.objects.current_semester(date=next_week)
            Traceback (most recent call last):
            ...
-           Exception: DoesNotExist
+           DoesNotExist
         """
         if not date:
             import datetime
@@ -144,8 +144,8 @@ class eduPerson(models.Model):
     
     You specify which object you wish to connect to such as::
     
-       >>> p = eduPerson.objects.create(ldap="dn=username, dc=state, dc=edu")
-       >>> p.ldap.first_name
+       p = eduPerson.objects.create(ldap="dn=rm6776, dc=state, dc=edu")
+       p.ldap.first_name
        'first_name_stored_in_ldap_directory'
     """
     user = models.OneToOneField(User, verbose_name=_('User'))
