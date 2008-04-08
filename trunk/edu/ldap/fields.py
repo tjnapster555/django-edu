@@ -3,6 +3,8 @@ import ldap
 from django.db import models
 from django.conf import settings
 
+from edu.ldap.utils import LDAPConnection, SecureLDAPConnection
+
 class LdapObjectField(models.Field):
     """This is a special field the stores a DN which relates to a LDAP object.
     
@@ -11,7 +13,7 @@ class LdapObjectField(models.Field):
     
        class Person(models.Model):
            name = models.CharField(max_length=255)
-           ldap = LdapObjectField(lookup_param="dc=State, dc=Edu", 
+           ldap = LdapObjectField(base="dc=directory,dc=State, dc=Edu", 
                                   server="ldap.state.edu", port=389)
     
     Then if you added a person to this class you could do the following 
@@ -23,17 +25,28 @@ class LdapObjectField(models.Field):
     """
     __metaclass__ = models.SubfieldBase
     
-    def __init(self, lookup_param, server=None, port=None):
+    def __init__(self, base=None, server=None, port=None):
         """Setup up ldap object field"""
         # if server/port are null use the defaults from settings.py
-        self.server = server or settings.LDAP_SERVER
-        self.port = port or settings.LDAP_SERVER_PORT
-        return super(Field, self).__init__()
+        self.base = base or getattr(settings, 'LDAP_BASE', '')
+        self.server = server or getattr(settings, 'LDAP_SERVER', None)
+        self.port = port or getattr(settings, 'LDAP_SERVER_PORT', 389)
+        self.is_secure = getattr(settings, 'LDAP_SECURE_CONNECTION', False)
+        self.username = getattr(settings, 'LDAP_SERVER_USER', '')
+        self.password = getattr(settings, 'LDAP_SERVER_USER_PASSWORD', '')
+        return super(LdapObjectField, self).__init__()
     
     def db_type(self):
         return 'varchar(255)'
     
     def to_python(self, value):
         """Lookup ldap object and return it."""
-        #TODO: Make this field work(tm)    
-        return None   
+        if self.is_secure:
+            connection = SecureLDAPConnection(self.server, port=self.port,
+                                              user=self.username,
+                                              password=self.password)
+        else:
+            connection = LDAPConnection(self.server, port=self.port,
+                                        user=self.username,
+                                        password=self.password)
+        return connection.search(self.base, 'sub', value)
