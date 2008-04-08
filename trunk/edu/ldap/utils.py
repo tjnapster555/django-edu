@@ -45,18 +45,14 @@ class LDAPConnection(object):
         self.connection.simple_bind_s(dn, password)        
     
     def close(self):
-        """Shutdown the connection."""
-        
         self.connection.unbind_s()
     
-    def search(self, searchBaseDN, scope, filter, returnAttributes=[]):
-        """"""
-        
+    def search(self, searchBaseDN, filter, scope=ldap.SCOPE_SUBTREE, returnAttributes=[]):
         results = self.connection.search_s(searchBaseDN, scope, filter, returnAttributes)
         return self.toItems(results)
     
     def toItems(self, results):
-        """Return the LDAPResults as LDAPItems."""
+        """Return the LDAPResults as LDAPItems which is a dict storage container."""
         
         return [LDAPItem(item) for item in results]
 
@@ -66,9 +62,9 @@ class SecureLDAPConnection(LDAPConnection):
     over that connection.
     
     Example use:
-    ldap = SecureLDAPConnection("ldap.state.edu", user="super", password="secret")
-
-    ldap.close()
+    
+        >>> ldaps = SecureLDAPConnection("ldap.state.edu", user="super", password="secret")
+        >>> ldaps.close()
     """
     
     def __init__(self, serverName, port=636, user="", password=""):
@@ -138,11 +134,14 @@ class LDAPItem(dict):
         removed.
         """
     
-    def __str__(self):
+    def __unicode__(self):
         attributes = self.keys()
         longestKeyLength = max([len(attr) for attr in attributes])
         output = []
         for attr in attributes:
-            output.append("%*s: %s" % (longestKeyLength, attr, ("\n%*s  " % (longestKeyLength, ' ')).join(self[attr])))
-        return "\n".join(output)
+            output.append(u"%*s: %s" % (longestKeyLength, attr, (u"\n%*s  " % (longestKeyLength, ' ')).join(self[attr])))
+        return u"\n".join(output)
+    
+    #def __unicode__(self):
+        #return self.uid
     

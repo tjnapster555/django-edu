@@ -146,12 +146,12 @@ class eduPerson(models.Model):
     
         >>> from django.conf import settings
         >>> settings.LDAP_SERVER = ldap.utexas.edu
-        >>> p = eduPerson.objects.create(ldap="uid=rm6776")
+        >>> p = eduPerson.objects.create(ldap="rm6776")
         >>> p.ldap.givenName
         'Robert'
     """
     user = models.OneToOneField(User, verbose_name=_('User'))
-    ldap = LdapObjectField(_("LDAP Person Object"))
+    ldap = LdapObjectField(_("LDAP Person Object"), filter_attr='uid')
     active = models.BooleanField(_("Active"), default=True)
     
     objects = eduPersonManager()
@@ -161,9 +161,9 @@ class eduPerson(models.Model):
     
     def update_user(self):
         """Update django.contrib.auth User model with info from LDAP."""
-        # TODO: update *all* user info
         self.user.first_name = self.ldap.givenName
-        self.user.last_name = self.ldap.SN
+        self.user.last_name = self.ldap.sn
+        self.user.email = self.ldap.mail
         self.user.save()
     
     def save(self):
