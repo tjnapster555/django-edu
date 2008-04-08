@@ -144,9 +144,11 @@ class eduPerson(models.Model):
     
     You specify which object you wish to connect to such as::
     
-       p = eduPerson.objects.create(ldap="dn=rm6776, dc=state, dc=edu")
-       p.ldap.first_name
-       'first_name_stored_in_ldap_directory'
+        >>> from django.conf import settings
+        >>> settings.LDAP_SERVER = ldap.utexas.edu
+        >>> p = eduPerson.objects.create(ldap="uid=rm6776")
+        >>> p.ldap.givenName
+        'Robert'
     """
     user = models.OneToOneField(User, verbose_name=_('User'))
     ldap = LdapObjectField(_("LDAP Person Object"))
