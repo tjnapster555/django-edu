@@ -145,16 +145,21 @@ class eduPerson(models.Model):
     You specify which object you wish to connect to such as::
     
         >>> from django.conf import settings
-        >>> settings.LDAP_SERVER = ldap.utexas.edu
+        >>> settings.LDAP_SERVER = 'ldap.utexas.edu'
         >>> p = eduPerson.objects.create(ldap="rm6776")
         >>> p.ldap.givenName
         'Robert'
     """
-    user = models.OneToOneField(User, verbose_name=_('User'))
+    user = models.OneToOneField(User, verbose_name=_('User'), raw_id_admin=True)
     ldap = LdapObjectField(_("LDAP Person Object"), filter_attr='uid')
     active = models.BooleanField(_("Active"), default=True)
     
     objects = eduPersonManager()
+    
+    def _get_ou(self):
+        return self.ldap.ou
+    
+    department = property(_get_ou)
     
     def __unicode__(self):
         return unicode(self.user)
@@ -171,7 +176,7 @@ class eduPerson(models.Model):
         super(eduPerson, self).save()
     
     class Admin:
-        list_display = ('user', 'ldap', 'active') 
+        list_display = ('user', 'ldap', 'department', 'active') 
     
 class Organization(models.Model):
     """*Organization*
