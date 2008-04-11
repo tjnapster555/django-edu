@@ -5,6 +5,8 @@ Utilities for accessing LDAP databases.
 import ldap
 import os.path
 
+from django.utils.encoding import force_unicode
+
 DEBUG = False
 if DEBUG:
     # Set debugging level
@@ -79,7 +81,14 @@ class SecureLDAPConnection(LDAPConnection):
         url = 'ldaps://%s:%s' % (serverName, str(port))
         self.connection = ldap.initialize(url)
         self.bind(user, password)
-    
+
+def lazy_unicode(s):
+    """Attempt to return a unicode string fail silently."""
+    try:
+        return force_unicode(s)
+    except:
+        return s
+
 class LDAPItem(dict):
     """
     Provides a storage container for LDAP objects, or anything with a DN and attributes.
@@ -92,12 +101,15 @@ class LDAPItem(dict):
         
         self.dn, self.attributes = LDAPResult
         for attribute, values in self.attributes.items():
+            # force unicode attributes and values fail silently
+            attr = lazy_unicode(attribute)
+            value = [lazy_unicode(s) for s in values]
             # Make first value of each LDAP attribute accessible
             # through instance attribute of same name
-            setattr(self, attribute, values[0])
+            setattr(self, attr, value[0])
             # Make the entire list of values for each LDAP attribute 
             # accessible through a dictionary mapping
-            self[attribute] = values
+            self[attr] = value
     
     def __getattr__(self, attribute):
         # Return an empty string if the attribute doesn't exist
@@ -109,6 +121,14 @@ class LDAPItem(dict):
         except KeyError:
             # Return an empty list if the attribute doesn't exist
             return []
+
+    def __getstate__(self): 
+        ''' Needed for cPickle in .copy() '''
+        return self.__dict__.copy() 
+
+    def __setstate__(self, dict): 
+        ''' Needed for cPickle in .copy() '''
+        self.__dict__.update(dict)
     
     def valueInAttribute(self, value, attribute):
         for item in self[attribute]:
@@ -116,32 +136,5 @@ class LDAPItem(dict):
                 return True
         return False
     
-    def refresh(self, ignoreMissing=False):
-        """
-        Refresh the data in the LDAPItem.
-        
-        Only query for the attributes that are currently stored in the LDAPItem.
-        """
-    
-    def save(self, ignoreMissing=True):
-        """
-        Save changed attributes to the LDAP server.
-        
-        If the action is not allowed, the save will fail.
-        
-        If ignoreMissing is set to True, then only update the attributes stored in the LDAPItem object.
-        If ignoreMissing is set to False, then any attributes not in the LDAPItem object will be
-        removed.
-        """
-    
     def __unicode__(self):
-        attributes = self.keys()
-        longestKeyLength = max([len(attr) for attr in attributes])
-        output = []
-        for attr in attributes:
-            output.append(u"%*s: %s" % (longestKeyLength, attr, (u"\n%*s  " % (longestKeyLength, ' ')).join(self[attr])))
-        return u"\n".join(output)
-    
-    #def __unicode__(self):
-        #return self.uid
-    
+        return unicode(self.dn)
