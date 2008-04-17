@@ -49,7 +49,7 @@ class Course(models.Model):
     department = models.ForeignKey(Department, verbose_name=_("Department"))
     prefix = models.CharField(_("Prefix"), max_length=25, blank=True,
         help_text=_("Usually used to indicate summer sessions"))
-    number = models.CharField(_("Course Number"), db_index=True)
+    number = models.CharField(_("Course Number"), db_index=True, max_length=25)
     title = models.CharField(_("Course Title"), max_length=255)
     abstract = models.TextField(_("Abstract"), blank=True, 
         help_text=_("If this course has a parent then this abstract will be appended to the parents abstract."))
