@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models import Q
 from sitebuilder.models import Section
 
 
@@ -58,8 +59,9 @@ class Story(models.Model):
     publish_date = models.DateTimeField("Publication date/time",
         help_text="Enter the date and time you want this story to appear.")
     active = models.BooleanField(default=True)
-    more = models.ForeignKey("ECEFlatPage", blank=True, null=True, raw_id_admin=True,
-        help_text="Link to the full news story this will show as a 'more...' link at the bottom of the content.")
+    # XXX. We need to do something for the more link.
+    #more = models.ForeignKey("ECEFlatPage", blank=True, null=True, raw_id_admin=True,
+    #    help_text="Link to the full news story this will show as a 'more...' link at the bottom of the content.")
     last_update = models.DateTimeField(auto_now=True)
 
     objects = ActiveManager()
@@ -67,6 +69,7 @@ class Story(models.Model):
     class Meta:
         verbose_name_plural = "news stories"
         get_latest_by = "pubish_date"
+        ordering = ('-publish_date',)
 
     class Admin:
         list_display = ('title', 'publish_date', 'active')
@@ -80,7 +83,6 @@ class Story(models.Model):
         search_fields = ('title', 'content')
         save_on_top = True
         list_per_page = 15
-        ordering = ('-publish_date',)
 
     def __unicode__(self):
         return smart_unicode(self.title)
@@ -145,20 +147,20 @@ class ImportantDate(models.Model):
         help_text="Select the sections you would like this deadline to be"
                   " displayed.")
     text = models.CharField(max_length=100)
-    date = models.DateTimeField()
-    end_date = models.DateTimeField(blank=True, null=True,
+    date = models.DateField()
+    end_date = models.DateField(blank=True, null=True,
         help_text="If the deadline covers a range of dates, then enter the"
                   " end date here.")
-    active = models.BooleanField(default=True)
-
-    objects = ActiveManager()
+    link = models.URLField(blank=True, null=True)
 
     class Meta:
         get_latest_by = "date"
 
     class Admin:
-        list_display = ('text', 'date', 'end_date', 'active')
-        list_filte = ('date', 'active')
+        ordering = ('-date')
+        list_display = ('text', 'date', 'end_date')
+        list_filter = ('date', 'sections')
+        search_fields = ('text',)
 
     def __unicode__(self):
         return u"%s - %s" % (unicode(self.date), unicode(self.text))
