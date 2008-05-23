@@ -55,37 +55,39 @@ class Story(models.Model):
     slug = models.SlugField(prepopulate_from=('title',))
     display_title = models.BooleanField(default=True,
         help_text="Choose whether or not the title should be displayed.")
+    image = models.ImageField(blank=True, null=True, upload_to='story_images',
+        help_text="Image that will appear when the story is the featured story.")
+    thumbnail = models.ImageField(blank=True, null=True,
+        upload_to='story_thumbnails',
+        help_text="A 83w X 63h image that gets displayed in the recent news box.")
     content = models.TextField(help_text="Place html content here.")
     publish_date = models.DateTimeField("Publication date/time",
         help_text="Enter the date and time you want this story to appear.")
     active = models.BooleanField(default=True)
-    # XXX. We need to do something for the more link.
-    #more = models.ForeignKey("ECEFlatPage", blank=True, null=True, raw_id_admin=True,
-    #    help_text="Link to the full news story this will show as a 'more...' link at the bottom of the content.")
     last_update = models.DateTimeField(auto_now=True)
 
     objects = ActiveManager()
 
     class Meta:
-        verbose_name_plural = "news stories"
+        verbose_name_plural = "stories"
         get_latest_by = "pubish_date"
         ordering = ('-publish_date',)
 
     class Admin:
         list_display = ('title', 'publish_date', 'active')
         list_filter = ('publish_date', 'active')
-        fields = (
-            ("Title", {'fields': (('title', 'display_title'), 'slug',
-                                  'publish_date')}),
-            ("Body", {'fields': ('content', ('story_type', 'active'), 'more'),
-                      'classes': 'extraLarge'}),
-        )
+#        fields = (
+#            ("Title", {'fields': (('title', 'display_title'), 'slug',
+#                                  'publish_date')}),
+#            ("Body", {'fields': ('content', 'active', 'more'),
+#                      'classes': 'extraLarge'}),
+#        )
         search_fields = ('title', 'content')
         save_on_top = True
         list_per_page = 15
 
     def __unicode__(self):
-        return smart_unicode(self.title)
+        return self.title
 
     def get_absolute_url(self):
         return reverse('news-display',
@@ -100,7 +102,7 @@ class Announcement(models.Model):
     """
     title = models.CharField(max_length=255)
     slug = models.SlugField(prepopulate_from=('title',))
-    content = models.TextField()
+    text = models.TextField()
     image = models.CharField(max_length=255,
         help_text="Please enter only the image name, ie. image.jpg")
     more_link = models.URLField(blank=True, null=True)
@@ -115,28 +117,46 @@ class Announcement(models.Model):
     objects = ActiveManager()
 
     class Meta:
-        verbose_name = "News Flash"
-        verbose_name_plural = "News Flashes"
         ordering = ('-publish_date',)
 
     class Admin:
         list_display = ('title', 'image', 'publish_date', 'expire_date', 'active')
         list_filter = ('publish_date', 'active')
-        search_fields = ('title', 'content')
+        search_fields = ('title', 'text')
         save_on_top = True
         fields = (
-            ("News Content", {'fields': (('active', 'title', 'slug'), 'content', 'image', 'more_link')}),
+            ("News Content", {'fields': (('active', 'title', 'slug'), 'text', 'image', 'more_link')}),
             ("Dates/Times", {'fields': (('publish_date', 'expire_date'),)}),
         )
 
     def __unicode__(self):
-        return smart_unicode(self.title)
+        return self.title
 
     def get_absolute_url(self):
         return reverse('news-display', args=[self.publish_date.year,
                                              self.publish_date.month,
                                              self.publish_date.day,
                                              self.slug])
+
+
+class ImportantDateManager(models.Manager):
+    """
+    Manager for ImportantDate that provides a convenience method for grabbing
+    dates for a specified number of months in the future.
+    """
+
+    def future(self, months=3):
+        """
+        Return a QuerySet of objects from today to months number of months into
+        the future.  By default, months is 3.
+        """
+        today = datetime.today()
+        return self.get_query_set().filter(
+            # If object has no end_date, then date should be today or later.
+            (Q(end_date__isnull=True) & Q(date__gte=today))
+            # Or if object has an end_date, then we still want object to show
+            # until end_date has passed.
+             | Q(end_date__gte=today))
 
 
 class ImportantDate(models.Model):
@@ -152,6 +172,8 @@ class ImportantDate(models.Model):
         help_text="If the deadline covers a range of dates, then enter the"
                   " end date here.")
     link = models.URLField(blank=True, null=True)
+
+    objects = ImportantDateManager()
 
     class Meta:
         get_latest_by = "date"
