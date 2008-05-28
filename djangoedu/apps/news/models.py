@@ -98,20 +98,19 @@ class Story(models.Model):
 class Announcement(models.Model):
     """
     Announcements are brief stories for drawing attention to special events,
-    or providing information.
+    or providing information.  They are not archived.
     """
     title = models.CharField(max_length=255)
-    slug = models.SlugField(prepopulate_from=('title',))
     text = models.TextField()
-    image = models.CharField(max_length=255,
-        help_text="Please enter only the image name, ie. image.jpg")
+    image = models.ImageField(blank=True, null=True,
+        upload_to='announcement_images')
     more_link = models.URLField(blank=True, null=True)
     publish_date = models.DateTimeField(
-        help_text="Enter the date and time you want this news item to appear.")
+        help_text="Enter the date and time you want this announcement to appear.")
     expire_date = models.DateTimeField(blank=True, null=True,
-        help_text="""Enter the date and time you would like this news item to stop
-            appearing.  Leaving this field blank will show the story
-            indefinitely, as long as it is active.""")
+        help_text="Enter the date and time you would like this announcment to"
+                  " stop appearing.  Leaving this field blank will show the"
+                  " story indefinitely, as long as it is active.")
     active = models.BooleanField(default=True)
 
     objects = ActiveManager()
@@ -125,8 +124,10 @@ class Announcement(models.Model):
         search_fields = ('title', 'text')
         save_on_top = True
         fields = (
-            ("News Content", {'fields': (('active', 'title', 'slug'), 'text', 'image', 'more_link')}),
-            ("Dates/Times", {'fields': (('publish_date', 'expire_date'),)}),
+            ("Announcement Content",
+                {'fields': ('title', 'text', 'image', 'more_link')}),
+            ("Publish Info",
+                {'fields': ('active', 'publish_date', 'expire_date')}),
         )
 
     def __unicode__(self):
