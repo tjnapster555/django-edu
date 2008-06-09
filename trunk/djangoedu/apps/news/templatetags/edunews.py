@@ -1,6 +1,6 @@
 from django import template
 
-from djangoedu.apps.news.models import Story
+from djangoedu.apps.news.models import Story, ImportantDate
 
 register = template.Library()
 
@@ -41,13 +41,11 @@ def story(parser, token):
         
     Example::
     
-        {% story "grad" 1 as "story" %}
+        {% story "grad" 1 as story %}
     """
     tokens = token.split_contents()
-    print tokens
     usage = ("Tag should be in the form of:"
              " {% story <slug> <number> as <variable> %}")
-    print tokens
     if len(tokens) != 5 or tokens[3] != 'as':
         raise template.TemplateSyntaxError(usage)
     try:
@@ -60,3 +58,44 @@ def story(parser, token):
         slug = slug[1:-1]
     return StoryNode(slug, number, tokens[4])
 register.tag('story', story)
+
+
+class DatesNode(template.Node):
+    def __init__(self, slug, var_name):
+        self.slug = slug
+        self.var_name = var_name
+
+    def render(self, context):
+        dates = ImportantDate.objects.future().filter(sections__slug=self.slug
+            ).order_by('date')
+        context[self.var_name] = dates
+        return ''
+
+def dates(parser, token):
+    """
+    Returns the upcoming important dates for a section.
+    
+    Inputs:
+    
+    * ``slug`` - Slug of the section to grab news stories for.
+    * ``variable`` - The name of the template variable to save the dates to.
+    
+    Syntax::
+    
+        {% dates <slug> as <variable> %}
+        
+    Example::
+    
+        {% dates "grad" as dates %}
+    """
+    tokens = token.split_contents()
+    usage = ("Tag should be in the form of:"
+             " {% dates <slug> as <variable> %}")
+    if len(tokens) != 4 or tokens[2] != 'as':
+        raise template.TemplateSyntaxError(usage)
+    slug = tokens[1]
+    if (slug.startswith('"') and slug.endswith('"')
+            or (slug.startswith("'") and slug.endswith("'"))):
+        slug = slug[1:-1]
+    return DatesNode(slug, tokens[3])
+register.tag('dates', dates)
