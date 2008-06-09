@@ -2,8 +2,8 @@ from datetime import datetime
 
 from django.db import models
 from django.db.models import Q
-from sitebuilder.models import Section
 from django.core.urlresolvers import reverse
+from sitebuilder.models import Section
 
 
 class ActiveManager(models.Manager):
