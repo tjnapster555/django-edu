@@ -101,6 +101,9 @@ class Announcement(models.Model):
     Announcements are brief stories for drawing attention to special events,
     or providing information.  They are not archived.
     """
+    sections = models.ManyToManyField(Section,
+        help_text="Select the sections you would like this deadline to be"
+                  " displayed.")
     title = models.CharField(max_length=255)
     text = models.TextField()
     image = models.ImageField(blank=True, null=True,
@@ -109,7 +112,7 @@ class Announcement(models.Model):
     publish_date = models.DateTimeField(
         help_text="Enter the date and time you want this announcement to appear.")
     expire_date = models.DateTimeField(blank=True, null=True,
-        help_text="Enter the date and time you would like this announcment to"
+        help_text="Enter the date and time you would like this announcement to"
                   " stop appearing.  Leaving this field blank will show the"
                   " story indefinitely, as long as it is active.")
     active = models.BooleanField(default=True)
@@ -124,12 +127,6 @@ class Announcement(models.Model):
         list_filter = ('publish_date', 'active')
         search_fields = ('title', 'text')
         save_on_top = True
-        fields = (
-            ("Announcement Content",
-                {'fields': ('title', 'text', 'image', 'more_link')}),
-            ("Publish Info",
-                {'fields': ('active', 'publish_date', 'expire_date')}),
-        )
 
     def __unicode__(self):
         return self.title
