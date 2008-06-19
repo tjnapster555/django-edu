@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from edu.ldap.fields import LdapObjectField
+from djangoedu.ldap.fields import LdapObjectField
 
 try:
     import mptt
@@ -150,14 +150,14 @@ class eduPerson(models.Model):
         >>> p.ldap.givenName
         'Robert'
     """
-    user = models.OneToOneField(User, verbose_name=_('User'), raw_id_admin=True)
+    user = models.OneToOneField(User, verbose_name=_('User'), primary_key=True, raw_id_admin=True)
     ldap = LdapObjectField(_("LDAP Person Object"), filter_attr='uid')
     active = models.BooleanField(_("Active"), default=True)
     
     objects = eduPersonManager()
     
     def _get_ou(self):
-        return self.ldap.ou
+        return self.ldap.ou[0]
     
     department = property(_get_ou)
     
@@ -166,9 +166,9 @@ class eduPerson(models.Model):
     
     def update_user(self):
         """Update django.contrib.auth User model with info from LDAP."""
-        self.user.first_name = self.ldap.givenName
-        self.user.last_name = self.ldap.sn
-        self.user.email = self.ldap.mail
+        self.user.first_name = self.ldap.givenName[0]
+        self.user.last_name = self.ldap.sn[0]
+        self.user.email = self.ldap.mail[0]
         self.user.save()
     
     def save(self):

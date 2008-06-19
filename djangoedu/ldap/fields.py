@@ -7,7 +7,7 @@ from django.core import validators
 from django import oldforms
 from django.core.cache import cache
 
-from edu.ldap.utils import LDAPConnection, SecureLDAPConnection, LDAPItem
+from djangoedu.ldap.utils import LDAPConnection, SecureLDAPConnection, LDAPItem
 
 class LDAPObject(object):
     """LDAPObject that is returned when LDAPObjectField attribute is accessed."""
